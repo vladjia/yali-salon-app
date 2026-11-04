@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>雅麗 App 連線測試</title>
+<style>
+  body{font:18px/1.5 -apple-system,"PingFang TC","Noto Sans TC",sans-serif;margin:0;padding:16px;background:#faf7f2;color:#222}
+  h1{font-size:22px;margin:0 0 8px} p{margin:6px 0}
+  button{font-size:18px;min-height:48px;padding:0 16px;margin:6px 6px 6px 0;border:0;border-radius:10px;background:#7a2b2b;color:#fff}
+  button:disabled{opacity:.5}
+  input{font-size:16px;width:100%;box-sizing:border-box;padding:10px;border:1px solid #ccc;border-radius:8px}
+  #log{white-space:pre-wrap;background:#fff;border:1px solid #e5dccd;border-radius:10px;padding:12px;margin-top:12px;font-size:15px}
+  .muted{color:#777;font-size:14px}
+</style></head><body>
+<h1>雅麗 App 連線測試</h1>
+<p class="muted">放在 GitHub Pages 上，用來量「App 從外面叫 GAS」要多久。第一次用「網址#k=金鑰」打開，金鑰只存在這支手機。</p>
+<div id="nokey" hidden>
+  <p>這支手機還沒有金鑰。請用元家給的連結打開，或把金鑰貼在這裡：</p>
+  <input id="k" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="64 個英文數字">
+  <button id="save">存起來</button>
+</div>
+<div id="tools" hidden>
+  <button id="b1">① 只連線 ×5</button>
+  <button id="b2">② 載入 14 天 ×3</button>
+  <button id="b3">③ 問版本號 ×5</button>
+  <button id="forget" style="background:#999">忘記金鑰</button>
+</div>
+<div id="log">準備中…</div>
+<script>
+// ── 景序：正式的 index.html 照這一段寫就好 ──────────────────────────
+const GAS = 'https://script.google.com/macros/s/AKfycbwqoeuDgkqyVVMgauSyui6zdMf8rapHBPWxQ6fylPRLTs8RuibtHjQptaxlDLBkK8Wc/exec'; // 公開沒關係：沒有金鑰什麼都拿不到
+const KEY_NAME = 'yaliKey';
+function readKey() {
+  let k = '';
+  const m = location.hash.match(/k=([0-9a-f]{64})/i);
+  try {
+    if (m) localStorage.setItem(KEY_NAME, m[1]);
+    k = localStorage.getItem(KEY_NAME) || '';
+  } catch (e) { k = m ? m[1] : ''; } // 私密瀏覽存不了：這次先用網址上的
+  return k || (m ? m[1] : '');
+}
+let KEY = readKey();
+/** 跟 google.script.run 版的 call() 用法一樣：call('apiDays', '', 14) → {ok:…} */
+async function call(fn, ...args) {
+  const r = await fetch(GAS + '?api=1', { method: 'POST', body: JSON.stringify({ fn, key: KEY, args }) }); // 不要加 headers（會變成要先問 OPTIONS，GAS 不回）
+  if (!r.ok) throw new Error('連線失敗（HTTP ' + r.status + '）');
+  return r.json();
+}
+// ─────────────────────────────────────────────────────────────────
+
+const $ = id => document.getElementById(id), log = s => { $('log').textContent += '\n' + s; };
+function show() {
+  $('nokey').hidden = !!KEY; $('tools').hidden = !KEY;
+  $('log').textContent = KEY ? '金鑰已存在這支手機（' + KEY.slice(0, 4) + '…）。按上面的按鈕開始量。' : '還沒有金鑰。';
+}
+$('save').onclick = () => { const v = $('k').value.trim(); if (!/^[0-9a-f]{64}$/i.test(v)) { log('⚠️ 金鑰格式不對（要 64 個英文數字）'); return; } try { localStorage.setItem(KEY_NAME, v); } catch (e) {} KEY = v; show(); };
+$('forget').onclick = () => { try { localStorage.removeItem(KEY_NAME); } catch (e) {} KEY = ''; show(); };
+async function bench(label, n, fn, args) {
+  document.querySelectorAll('button').forEach(b => b.disabled = true);
+  const ms = [];
+  try {
+    for (let i = 0; i < n; i++) {
+      const t0 = performance.now(); const r = await call(fn, ...args); const t = Math.round(performance.now() - t0);
+      if (!r.ok) { log('⚠️ ' + label + '：' + (r.code || '') + ' ' + (r.message || '')); return; }
+      ms.push(t);
+    }
+    const avg = Math.round(ms.reduce((a, b) => a + b, 0) / ms.length);
+    log('✅ ' + label + '：平均 ' + avg + 'ms／最慢 ' + Math.max(...ms) + 'ms（' + ms.join('、') + '）');
+  } catch (e) { log('❌ ' + label + '：' + e.message); }
+  finally { document.querySelectorAll('button').forEach(b => b.disabled = false); }
+}
+$('b1').onclick = () => bench('只連線', 5, 'apiPing', []);
+$('b2').onclick = () => bench('載入 14 天', 3, 'apiDays', ['', 14]);
+$('b3').onclick = () => bench('問版本號', 5, 'apiPulse', []);
+show();
+</script>
+</body></html>
