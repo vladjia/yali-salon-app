@@ -1,10 +1,10 @@
 /* Dedicated pending list, independent of the selected date. */
 (()=>{
  const panel=document.createElement('section');panel.id='bookingRequests';panel.className='panel';panel.hidden=true;document.querySelector('main .header').after(panel);
- let items=[],loading=false,again=false,error='';
+ let items=[],loading=false,again=false,error='',revision=0;
  async function refresh(){
-  if(!KEY)return;if(loading){again=true;return;}loading=true;
-  try{const r=await call('apiPendingList');if(!r?.ok||!Array.isArray(r.items))throw Error(r?.code==='BAD_FN'?'新申請功能還沒更新，請元家確認後端部署。':'新申請暫時更新不到，請按上方「更新」重試。');items=r.items;error='';}
+  if(!KEY)return;if(loading){again=true;return;}loading=true;const startedRevision=revision;
+  try{const r=await call('apiPendingList');if(!r?.ok||!Array.isArray(r.items))throw Error(r?.code==='BAD_FN'?'新申請功能還沒更新，請元家確認後端部署。':'新申請暫時更新不到，請按上方「更新」重試。');if(startedRevision!==revision){again=true;return;}items=r.items;error='';}
   catch(e){error=e.message||'新申請更新失敗，請稍後再試。';}
   finally{loading=false;if(!refreshBusy())render();if(again){again=false;refresh();}}
  }
@@ -17,6 +17,6 @@
    openSimple(adapted,'transition',to==='CONFIRMED'?'要確認這筆預約申請嗎？':'確定要拒絕這筆申請嗎？',{to,danger:to==='REJECTED'});
   });
  }
- window.YaliRequests={render,refresh};render();refresh();
+ window.YaliRequests={render,refresh,dismiss(id){revision++;items=items.filter(item=>item.id!==id);render();}};render();refresh();
  document.addEventListener('focusout',()=>setTimeout(()=>{if(!refreshBusy())render();},0));
 })();
