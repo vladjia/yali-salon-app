@@ -728,7 +728,7 @@ function showKeyPrompt() {
       }
 
       else if (d.view === 'simpleConfirm') {
-        $('dialogTitle').textContent = '請確認';
+        $('dialogTitle').textContent = d.action === 'transition' && d.to === 'CANCELLED' ? '要取消這筆嗎？' : '請確認';
 
         content = `
           ${dialogMessage(d)}
