@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="雅麗預約">
   <meta name="referrer" content="no-referrer">
+  <link rel="stylesheet" href="line-links.css">
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/icon-180-v2.png">
   <link rel="icon" href="icons/icon-192-v2.png">
@@ -276,6 +277,7 @@ function showKeyPrompt() {
 
         S.lastMs = Math.round(performance.now() - began);
         renderHome();
+        window.YaliLineLinks?.refresh();
         if (automatic) window.scrollTo(scrollBefore.x, scrollBefore.y);
         return true;
       } catch (err) {
@@ -820,6 +822,7 @@ function showKeyPrompt() {
         };
         customerSelect.addEventListener('change', syncNewCustomerFields);
         syncNewCustomerFields();
+        window.YaliLineLinks?.mountNew();
       }
     }
 
@@ -1172,7 +1175,9 @@ function showKeyPrompt() {
           } else if (r && r.code === 'CONFLICT') {
             d.error = '⚠️ 這段時間已經有人安排，不能直接修改。';
           } else if (r && r.code === 'ALREADY') {
-            d.error = '這一次已經轉成一般預約，請回首頁修改那筆。';
+            d.error = fn === 'apiCreate' && req.lineUserId
+              ? (r.message || '這個 LINE 已經連到另一位客人，請確認人選。')
+              : '這一次已經轉成一般預約，請回首頁修改那筆。';
           } else {
             d.error = responseError(r);
           }
@@ -1261,8 +1266,8 @@ function showKeyPrompt() {
       const minutes = Number($('createMinutes').value || 0);
       const note = $('createNote').value.trim();
 
-      if (!customerId && (!nickname || !phone)) {
-        d.error = '請選既有客人，或填寫新客人的稱呼與電話';
+      if (!customerId && (!nickname || (!d.lineUserId && !phone))) {
+        d.error = d.lineUserId ? '請選既有客人，或填寫新客人的稱呼' : '請選既有客人，或填寫新客人的稱呼與電話';
         renderDialog();
         return;
       }
@@ -1286,6 +1291,7 @@ function showKeyPrompt() {
         req.phone = phone;
       }
 
+      if (d.lineUserId) req.lineUserId = d.lineUserId;
       if (minutes > 0) req.minutes = minutes;
       if (note) req.note = note;
 
@@ -1353,7 +1359,8 @@ function showKeyPrompt() {
       try {
         const [services, customers] = await Promise.all([
           call('apiServices'),
-          call('apiCustomers')
+          call('apiCustomers'),
+          window.YaliLineLinks?.refresh(true)
         ]);
 
         if (services?.ok) S.services = services.services || [];
@@ -1557,7 +1564,7 @@ function showKeyPrompt() {
     autoStatus.setAttribute('aria-live', 'polite');
     $('appointments').before(autoStatus);
     function refreshBusy() {
-      return Boolean(S.dialog || document.activeElement?.matches('input,select,textarea'));
+      return Boolean(S.dialog || document.querySelector('#lineLinkDialog[open],#priceAppFrame:not([hidden])') || document.activeElement?.matches('input,select,textarea'));
     }
     function deferRefresh() {
       pulsePending = true;
@@ -1654,5 +1661,6 @@ function showKeyPrompt() {
     });
     init();
   </script>
+<script src="line-links.js"></script>
 </body>
 </html>
