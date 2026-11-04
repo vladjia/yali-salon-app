@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hant"><head><title>雅麗｜價目表管理</title><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"><script src="connection.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="zh-Hant"><head><title>雅麗｜價目表管理</title><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"><script src="connection.js"></script><link rel="stylesheet" href="send-feedback.css"><script src="send-feedback.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
   :root{--bg:#faf6f2;--card:#fff;--ink:#2a2523;--dim:#8a807b;--line:#eee3dc;--acc:#b5536b;--warn:#d9822b;--bad:#c0392b;--ok:#2e7d5b;--chg:#fff4d6}
   *{box-sizing:border-box} html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -104,7 +104,7 @@ $('back').onclick = event => {
     window.parent.postMessage({type:'yali-close-price'}, location.origin);
   }
 };
-async function call(fn, ...a) { return YaliConnection.call(KEY, fn, ...a); }
+async function call(fn, ...a) { return YaliSendFeedback.run(fn, a, () => YaliConnection.call(KEY, fn, ...a)); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 function say(html, kind) { $('msg').innerHTML = html ? '<div class="msg ' + (kind || 'ok') + '">' + html + '</div>' : ''; }
 
@@ -196,10 +196,10 @@ async function doSave() {
   if (!OPID) OPID = 'op-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   const req = { opId: OPID, changes: c.map(x => ({ id: x.it.id, stamp: x.it.stamp, set: x.set })) };
   BUSY = true; $('go').disabled = true; $('go').textContent = '儲存中…'; $('save').disabled = true;
-  const timer = setTimeout(() => { $('sheetMsg').innerHTML = '<div class="msg warn">還沒確定有沒有存好。可以再按一次「確定儲存」，不會存兩次。</div>'; $('go').disabled = false; $('go').textContent = '確定儲存'; BUSY = false; }, 8000);
+
   let r;
   try { r = await call('apiPriceSave', req); } catch (e) { r = { ok: false, message: '連線失敗：' + e.message }; }
-  clearTimeout(timer); BUSY = false;
+  BUSY = false;
   if (r.ok) {
     $('mask').classList.remove('on'); OPID = null;
     DATA.items = r.items; draw(); count(); loadPreview();

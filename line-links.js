@@ -99,8 +99,7 @@
     dialog.querySelectorAll('button,input,select').forEach(e=>e.disabled=true);
     document.getElementById('lineDialogMessage').textContent='正在儲存，請稍候…';
     try {
-      let timer;
-      const r=await Promise.race([call(fn,req),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('還沒確定是否儲存成功，請保留原選項重試。')),8000);})]).finally(()=>clearTimeout(timer));if(operation!==op)return;
+      const r=await call(fn,req);if(operation!==op)return;
       if(!r?.ok)throw Error(errorText(r));
       op.busy=false;endDialog();
       flash(op.kind==='link'?'已幫客人連上 LINE。':op.kind==='ignore'?'已從名單移除。':'已取消這個 LINE 的連接。','success');

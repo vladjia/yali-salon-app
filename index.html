@@ -12,7 +12,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=2">
   <link rel="apple-touch-icon" href="icons/icon-180-v2.png">
   <link rel="icon" href="icons/icon-192-v2.png">
-  <script src="connection.js"></script>
+  <script src="connection.js"></script><link rel="stylesheet" href="send-feedback.css"><script src="send-feedback.js"></script>
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -105,7 +105,7 @@ body.access-locked .wrap > :not(header):not(#accessPanel), body.access-locked .h
 const BASE = "https://script.google.com/macros/s/AKfycbwqoeuDgkqyVVMgauSyui6zdMf8rapHBPWxQ6fylPRLTs8RuibtHjQptaxlDLBkK8Wc/exec";
 let KEY = YaliConnection.readKey();
 async function call(fn, ...args) {
-  const r = await YaliConnection.call(KEY, fn, ...args);
+  const r = await YaliSendFeedback.run(fn, args, () => YaliConnection.call(KEY, fn, ...args));
   if (r && r.code === 'FORBIDDEN') showKeyPrompt();
   else if (r?.ok) document.body.classList.remove('access-locked');
   return r;
@@ -587,9 +587,9 @@ function showKeyPrompt() {
 
         content = `
           <div class="review">
-            <div class="small">${d.kind === 'new' ? '正在新增預約：' : '正在把預約改成'}</div>
+            <div class="small">${d.action === 'transition' ? ({CONFIRMED:'正在確認預約：',REJECTED:'正在拒絕申請：',CANCELLED:'正在取消預約：',COMPLETED:'正在標記完成：'}[d.to] || '正在更新預約：') : d.kind === 'new' ? '正在新增預約：' : '正在把預約改成'}</div>
             <div class="new-time">${h(longWhen(d.selectedStart))}</div>
-            <p>⏳ 儲存中，請稍等一下…</p>
+            <button type="button" id="sendFeedbackButton" disabled>⏳ 處理中…</button>
             <p class="small">不要重複按，也不要關閉畫面。</p>
           </div>
         `;
@@ -718,6 +718,15 @@ function showKeyPrompt() {
         `;
       }
 
+      else if (d.view === 'transitionReason' || d.view === 'transitionReasonCustom') {
+        const cancelling = d.to === 'CANCELLED';
+        $('dialogTitle').textContent = cancelling ? '取消的原因是？' : '這次沒辦法安排的原因是？';
+        const choices = cancelling
+          ? [['customer','客人說要取消'],['busy','雅麗臨時有事'],['closed','那天店裡臨時休息'],['custom','自己寫…'],['none','不寫原因']]
+          : [['full','那天已經排滿了'],['unavailable','這個時間沒辦法'],['custom','自己寫…'],['none','不寫原因']];
+        content = `${dialogMessage(d)}<p class="small">${h(d.item.customer?.name || '客人')} · ${h(longWhen(d.item.start))}</p>${d.view === 'transitionReasonCustom' ? `<label for="transitionReasonText">想跟客人說的原因（最多60字）</label><textarea id="transitionReasonText" maxlength="60" rows="3" placeholder="請填寫給客人看的原因">${h(d.reasonDraft || '')}</textarea><div class="action-stack"><button data-act="useTransitionReason" class="primary">下一步，看通知內容</button><button data-act="editTransitionReason">回到原因選項</button></div>` : `<p>選一個原因，接著確認客人會收到的通知。</p><div class="action-stack">${choices.map(([key,label])=>`<button data-act="chooseTransitionReason" data-reason="${key}">${h(label)}</button>`).join('')}<button data-act="close">先不要</button></div>`}`;
+      }
+
       else if (d.view === 'simpleConfirm') {
         $('dialogTitle').textContent = '請確認';
 
@@ -730,6 +739,7 @@ function showKeyPrompt() {
             <div class="new-time">${h(longWhen(d.item.start))}</div>
           </div>
           <div class="action-stack">
+            ${d.reasonRequired ? `<p class="notice">客人會收到：<br>${h(transitionNotice(d))}</p><button data-act="editTransitionReason">修改原因</button>` : ''}
             <button class="${d.danger ? 'danger' : 'good'}"
                     data-act="saveSimple"
                     ${d.busy ? 'disabled' : ''}>
@@ -995,9 +1005,7 @@ function showKeyPrompt() {
 
       const timer = setTimeout(() => {
         if (!finished && S.dialog === d) {
-          d.busy = false;
-          d.view = 'unknown';
-          renderDialog();
+          d.slow = true;
         }
       }, 8000);
 
@@ -1061,8 +1069,8 @@ function showKeyPrompt() {
 
         if (S.dialog === d) {
           d.busy = false;
-          d.view = 'unknown';
-          d.error = err.message || String(err);
+          d.view = 'confirmEdit';
+          d.error = '連線中斷，還不能確認是否完成。' + (err.message || String(err)) + ' 若重試會沿用原操作編號。';
           renderDialog();
         }
       }
@@ -1153,9 +1161,7 @@ function showKeyPrompt() {
 
       const timer = setTimeout(() => {
         if (!finished && S.dialog === d) {
-          d.busy = false;
-          d.view = 'unknownSimple';
-          renderDialog();
+          d.slow = true;
         }
       }, 8000);
 
@@ -1201,8 +1207,8 @@ function showKeyPrompt() {
 
         if (S.dialog === d) {
           d.busy = false;
-          d.view = 'unknownSimple';
-          d.error = err.message || String(err);
+          d.view = oldView;
+          d.error = '連線中斷，還不能確認是否完成。' + (err.message || String(err)) + ' 若重試會沿用原操作編號。';
           renderDialog();
         }
       }
@@ -1304,13 +1310,23 @@ function showKeyPrompt() {
       await saveSimpleApi('apiCreate', req, '✅ 新預約已建立');
     }
 
+    function transitionNotice(d) {
+      const time=longWhen(d.item.start);
+      if(d.to==='CANCELLED' && d.customerAsked)return '已經照您說的幫您取消 '+time+' 的預約了，期待下次見到您 🌷';
+      const prefix=d.to==='CANCELLED'?'很抱歉，':'不好意思，';
+      return prefix+(d.reason?'因為'+d.reason+'，':'')+time+(d.to==='CANCELLED'?' 的預約需要取消。造成不便很不好意思。':' 這個時間沒辦法安排。')+' 可以按「我要預約」再選其他時間，或用「LINE 通話」聯絡。';
+    }
+
     function openSimple(item, action, question, extra={}) {
+      const needsReason = action === 'transition' && ['CANCELLED','REJECTED'].includes(extra.to) && item.customer?.hasLine !== false;
       openDialog({
         kind: 'simple',
         view: 'simpleConfirm',
         item, action, question,
         opId: null, busy: false,
-        ...extra
+        ...extra,
+        reasonRequired: needsReason, reasonChosen: false,
+        view: needsReason ? 'transitionReason' : 'simpleConfirm'
       });
     }
 
@@ -1321,12 +1337,15 @@ function showKeyPrompt() {
       if (!d.opId) d.opId = makeOpId();
 
       if (d.action === 'transition') {
+        if (d.reasonRequired && !d.reasonChosen) return;
         const req = {
           opId: d.opId,
           bookingId: d.item.booking.id,
           version: d.item.booking.version,
           to: d.to
         };
+        if (['CANCELLED','REJECTED'].includes(d.to) && d.reason) req.reason = d.reason;
+        if (d.to === 'CANCELLED' && d.customerAsked) req.customerAsked = true;
 
         await saveSimpleApi('apiTransition', req,
           '✅ 預約狀態已更新');
@@ -1527,6 +1546,24 @@ function showKeyPrompt() {
           }
         }
 
+        else if (act === 'chooseTransitionReason') {
+          const d=S.dialog;if(!d || d.busy)return;
+          const key=button.dataset.reason;
+          if(key==='custom'){d.view='transitionReasonCustom';renderDialog();return;}
+          const reasons={busy:'雅麗臨時有事',closed:'那天店裡臨時休息',full:'那天已經排滿了',unavailable:'這個時間沒辦法安排'};
+          d.reason=reasons[key]||'';d.customerAsked=d.to==='CANCELLED'&&key==='customer';d.reasonChosen=true;d.opId=null;d.error='';d.view='simpleConfirm';renderDialog();
+        }
+        else if (act === 'useTransitionReason') {
+          const d=S.dialog;if(!d||d.busy)return;
+          d.reasonDraft=$('transitionReasonText').value;
+          const reason=d.reasonDraft.replace(/[\r\n]+/g,' ').trim();
+          if(!reason || reason.length>60){d.error='請填寫1～60字的原因。';renderDialog();return;}
+          d.reason=reason;d.customerAsked=false;d.reasonChosen=true;d.opId=null;d.error='';d.view='simpleConfirm';renderDialog();
+        }
+        else if (act === 'editTransitionReason') {
+          const d=S.dialog;if(!d||d.busy)return;d.view='transitionReason';d.error='';renderDialog();
+        }
+
         else if (act === 'saveSimple') {
           await executeSimple();
         }
@@ -1567,7 +1604,7 @@ function showKeyPrompt() {
     autoStatus.setAttribute('aria-live', 'polite');
     $('appointments').before(autoStatus);
     function refreshBusy() {
-      return Boolean(S.dialog || document.querySelector('#lineLinkDialog[open],#priceAppFrame:not([hidden])') || document.activeElement?.matches('input,select,textarea'));
+      return Boolean(S.dialog || window.YaliPush?.isBusy?.() || document.querySelector('#lineLinkDialog[open],#priceAppFrame:not([hidden])') || document.activeElement?.matches('input,select,textarea'));
     }
     function deferRefresh() {
       pulsePending = true;
