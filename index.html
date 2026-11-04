@@ -278,6 +278,7 @@ function showKeyPrompt() {
         S.lastMs = Math.round(performance.now() - began);
         renderHome();
         window.YaliLineLinks?.refresh();
+        window.YaliRequests?.refresh();
         if (automatic) window.scrollTo(scrollBefore.x, scrollBefore.y);
         return true;
       } catch (err) {
