@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-Hant"><head><title>雅麗｜價目表管理</title><meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"><script src="connection.js"></script><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--bg:#faf6f2;--card:#fff;--ink:#2a2523;--dim:#8a807b;--line:#eee3dc;--acc:#b5536b;--warn:#d9822b;--bad:#c0392b;--ok:#2e7d5b;--chg:#fff4d6}
+  *{box-sizing:border-box} html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:1.25rem/1.5 -apple-system,"PingFang TC","Noto Sans TC",sans-serif;padding:0 0 110px}
+  header{padding:16px 16px 4px} h1{font-size:1.6rem;margin:0} .dim{color:var(--dim);font-size:1rem}
+  a.back{display:inline-block;margin:8px 0;font-size:1.1rem;color:var(--acc)}
+  .msg{margin:10px 16px;padding:12px 14px;border-radius:12px;font-size:1.1rem}
+  .msg.bad{background:#fdecea;color:var(--bad)} .msg.ok{background:#e8f5ee;color:var(--ok)} .msg.warn{background:#fff3e0;color:#9a5b12}
+  h2{font-size:1.35rem;margin:22px 16px 8px;color:var(--acc)}
+  .card{background:var(--card);margin:10px 12px;border-radius:16px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+  .card.changed{outline:3px solid #f2c94c}
+  .card .title{font-size:1.3rem;font-weight:700;margin-bottom:6px}
+  label{display:block;font-size:1rem;color:var(--dim);margin-top:8px}
+  input,select{width:100%;font-size:1.15rem;min-height:48px;padding:8px 12px;border:1px solid #d9cec7;border-radius:10px;background:#fff;color:var(--ink)}
+  input.chg,select.chg{background:var(--chg);border-color:#e0b100}
+  input.err{border:2px solid var(--bad);background:#fdecea}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{font-size:1.15rem;min-height:48px;padding:0 16px;border-radius:12px;border:0;background:#3a3330;color:#fff;cursor:pointer}
+  button.ghost{background:#f1e9e4;color:var(--ink)} button:disabled{opacity:.5}
+  .adv{margin-top:12px}
+  .grp{border-radius:12px;padding:10px 12px;margin-top:10px;background:#faf7f5}
+  .grp.booking{border:2px solid var(--warn);background:#fff8f0}
+  .grp h3{margin:0;font-size:1.05rem} .grp.booking h3{color:var(--warn)}
+  .bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center}
+  .bar .n{flex:1;font-size:1.1rem}
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:9}
+  .mask.on{display:flex}
+  .sheet{background:#fff;width:100%;max-width:640px;max-height:85vh;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .sheet h2{margin:0 0 10px;color:var(--ink)}
+  .diff{padding:10px 0;border-bottom:1px solid var(--line);font-size:1.15rem}
+  .diff s{color:var(--dim)} .diff b{font-size:1.25rem} .diff .aff{color:var(--bad);font-size:1rem;display:block}
+  .preview{margin:10px 12px;background:#fff;border-radius:16px;padding:12px}
+  .frame{position:relative;width:100%;aspect-ratio:420/600;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .frame iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0}
+  .mini{padding:6%;font-size:.8rem;line-height:1.35}
+  .mini h4{margin:.8em 0 .3em;font-size:1rem;color:var(--acc)} .mini .it{display:flex;justify-content:space-between;gap:8px}
+  .mini .nt{color:var(--dim);font-size:.75rem;margin:-2px 0 2px}
+
+/* YALI: the same light paper, charcoal and restrained burgundy identity. */
+:root{--bg:#f8f7f3;--card:#fffefa;--ink:#37352f;--dim:#746f65;--line:#ded9cf;--acc:#810112;--chg:#fff5dc}
+html{font-size:18px}body{max-width:960px;margin:auto;padding-bottom:130px;background:var(--bg)}
+header{position:relative;padding:38px 25px 27px;border-bottom:1px solid var(--line);margin:0 16px 25px}
+header:before{content:'YALI · SALON DESIGN';display:block;font-size:.75rem;letter-spacing:.17em;color:#82765f;margin-bottom:12px}
+header:after{content:'Price List';display:block;font:italic 2.1rem 'Brush Script MT',cursive;margin:12px 0;color:#514b40}
+h1{font-size:1.9rem}.dim{line-height:1.7}a.back{color:var(--ink)}
+h2{font-size:1.4rem;color:var(--ink);margin:32px 24px 12px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.card{margin:14px 16px;border:1px solid var(--line);padding:24px;border-radius:15px;box-shadow:0 6px 20px #39332605}
+.card .title{font-size:1.3rem}.card.changed{outline:2px solid #bda673}
+label{color:var(--ink);margin-top:17px}input,select{margin-top:7px;font-size:1.1rem;min-height:54px;border-color:#cec7b9;border-radius:9px}
+button{min-height:54px;background:#44413b;line-height:1.4;padding:10px 17px}button.ghost{background:#f2efe8;border:1px solid var(--line)}
+.grp{background:#f7f5ef;padding:16px}.grp.booking{border:1px solid #ccb98f;background:#fbf7ee}
+.bar{max-width:960px;margin:auto;background:#fffef9;box-shadow:0 -6px 30px #39332609;flex-wrap:wrap}.bar .n{min-width:125px}
+.mask{background:#28231e66}.sheet{background:#fffefa;border-top:3px solid #bda673;border-radius:20px 20px 0 0}
+.preview{margin:26px 16px;padding:22px;border:1px solid var(--line);background:#fffefa}.frame{margin-top:16px}.msg{overflow-wrap:anywhere}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #bda673;outline-offset:3px}
+@media(max-width:480px){header{padding:26px 8px}.card{padding:18px}.row2{grid-template-columns:1fr}.bar{gap:8px}.bar .n{flex-basis:100%}.bar button{flex:1}}
+
+</style></head>
+<body>
+<header>
+  <a class="back" id="back">← 回管理頁</a>
+  <h1>價目表</h1>
+  <div class="dim">平常只改「類別、名稱、價格」。其他的按「進階修改」。版本 App v2</div>
+</header>
+<div id="msg"></div>
+<div id="list"><div class="msg warn">讀取中…</div></div>
+
+<div class="preview">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font-weight:700">海報預覽</div>
+    <button class="ghost" onclick="loadPreview()">重新整理預覽</button>
+  </div>
+  <div class="frame" id="frame"></div>
+  <div id="pdf" style="margin-top:10px"></div>
+</div>
+
+<div class="bar">
+  <div class="n" id="count">沒有修改</div>
+  <button class="ghost" id="undo" onclick="undoAll()" disabled>全部還原</button>
+  <button id="save" onclick="openDiff()" disabled>儲存</button>
+</div>
+
+<div class="mask" id="mask"><div class="sheet">
+  <h2>本次修改</h2>
+  <div id="diffs"></div>
+  <div id="sheetMsg"></div>
+  <div style="display:flex;gap:10px;margin-top:14px">
+    <button class="ghost" style="flex:1" onclick="closeDiff()">再看看</button>
+    <button style="flex:2" id="go" onclick="doSave()">確定儲存</button>
+  </div>
+</div></div>
+
+<script>
+const KEY = YaliConnection.readKey();
+const BASE = YaliConnection.BASE;
+let POSTER = new URL('poster.html', location.href).href;
+const $ = id => document.getElementById(id);
+$('back').href = 'index.html';
+$('back').onclick = event => {
+  if (window.parent !== window) {
+    event.preventDefault();
+    window.parent.postMessage({type:'yali-close-price'}, location.origin);
+  }
+};
+async function call(fn, ...a) { return YaliConnection.call(KEY, fn, ...a); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function say(html, kind) { $('msg').innerHTML = html ? '<div class="msg ' + (kind || 'ok') + '">' + html + '</div>' : ''; }
+
+// 欄位：key、標題、種類、哪一組
+const F = [
+  ['cat', '類別', 'text', 'base'], ['name', '名稱', 'text', 'base'], ['price', '顯示價格（可以打「1000起」「700/片」）', 'text', 'base'],
+  ['posterShow', '海報顯示', 'bool', 'poster'], ['posterNote', '海報備註（印在海報上的小字）', 'text', 'poster'],
+  ['normal', '一般時間（分鐘）', 'num', 'booking'], ['longest', '最長時間（分鐘）', 'num', 'booking'], ['buffer', '整理時間（分鐘，空白＝預設 20）', 'num', 'booking'],
+  ['line', 'LINE 可以約', 'bool', 'booking'], ['addon', '加購', 'bool', 'booking'], ['order', '排序（數字小的排前面）', 'num', 'booking']
+];
+const LABEL = { cat: '類別', name: '名稱', price: '價格', posterShow: '海報顯示', posterNote: '海報備註', normal: '一般時間', longest: '最長時間', buffer: '整理時間', line: 'LINE 可約', addon: '加購', order: '排序' };
+const AFFECTS = { normal: 1, buffer: 1, line: 1 };
+let DATA = null, OPID = null, BUSY = false;
+
+function norm(k, v) { // 統一成字串比較
+  const t = (F.find(f => f[0] === k) || [])[2];
+  if (t === 'bool') return v ? '是' : '否';
+  return v == null ? '' : String(v).trim();
+}
+async function load(note) {
+  try {
+    const r = await call('apiPriceList');
+    if (!r.ok) { $('list').innerHTML = '<div class="msg bad">' + esc(r.message) + '</div>'; return; }
+    DATA = r;
+    draw(); count(); loadPreview();
+    if (note) say(note[0], note[1]);
+    if (!r.posterColumns) say('Services 還沒有「海報顯示／海報備註」欄位：請元家在 GAS 跑一次 建立雅麗試算表()。其他可以照常改。', 'warn');
+  } catch (e) { $('list').innerHTML = '<div class="msg bad">讀不到：' + esc(e.message) + '</div>'; }
+}
+function field(it, f) {
+  const [k, label, t] = f, id = 'f-' + it.id + '-' + k, v = norm(k, it[k]);
+  if (t === 'bool') return '<label for="' + id + '">' + label + '</label><select id="' + id + '" data-id="' + it.id + '" data-k="' + k + '" onchange="count()"' + (f[3] === 'poster' && !DATA.posterColumns ? ' disabled' : '') + '><option' + (v === '是' ? ' selected' : '') + '>是</option><option' + (v === '否' ? ' selected' : '') + '>否</option></select>';
+  return '<label for="' + id + '">' + label + '</label><input id="' + id + '" data-id="' + it.id + '" data-k="' + k + '" value="' + esc(v) + '"' + (t === 'num' ? ' inputmode="numeric"' : '') + (k === 'cat' ? ' list="cats"' : '') + (f[3] === 'poster' && !DATA.posterColumns ? ' disabled' : '') + ' oninput="count()">';
+}
+function draw() {
+  let h = '<datalist id="cats">' + DATA.categories.map(c => '<option value="' + esc(c) + '">').join('') + '</datalist>', cur = null;
+  DATA.items.forEach(it => {
+    if (it.cat !== cur) { cur = it.cat; h += '<h2>' + esc(cur) + '</h2>'; }
+    h += '<div class="card" id="c-' + it.id + '"><div class="title">' + esc(it.name) + (it.posterShow ? '' : '　<span class="dim">（海報不顯示）</span>') + (it.line ? '' : '　<span class="dim">（LINE 不能約）</span>') + '</div>' +
+      F.filter(f => f[3] === 'base').map(f => field(it, f)).join('') +
+      '<button class="ghost adv" onclick="toggleAdv(\'' + it.id + '\', this)">進階修改 ▾</button>' +
+      '<div id="a-' + it.id + '" style="display:none">' +
+        '<div class="grp"><h3>海報</h3>' + F.filter(f => f[3] === 'poster').map(f => field(it, f)).join('') + '</div>' +
+        '<div class="grp booking"><h3>⚠️ 預約系統（會影響客人能約的時間）</h3><div class="dim">已經排好的預約不會變，只影響之後的空檔。</div>' +
+          '<div class="row2">' + F.filter(f => ['normal', 'longest'].includes(f[0])).map(f => '<div>' + field(it, f) + '</div>').join('') + '</div>' +
+          F.filter(f => ['buffer', 'line', 'addon', 'order'].includes(f[0])).map(f => field(it, f)).join('') +
+        '</div>' +
+      '</div></div>';
+  });
+  $('list').innerHTML = h;
+}
+function toggleAdv(id, b) { const a = $('a-' + id), on = a.style.display === 'none'; a.style.display = on ? 'block' : 'none'; b.textContent = on ? '收起進階 ▴' : '進階修改 ▾'; }
+function collect() { // 找出改了哪些
+  const out = [];
+  DATA.items.forEach(it => {
+    const set = {}, diffs = [];
+    F.forEach(([k, , t]) => {
+      const el = $('f-' + it.id + '-' + k); if (!el || el.disabled) return;
+      const nv = el.value.trim(), ov = norm(k, it[k]);
+      el.classList.toggle('chg', nv !== ov); el.classList.remove('err');
+      if (nv === ov) return;
+      set[k] = t === 'bool' ? nv === '是' : t === 'num' ? (nv === '' ? (k === 'buffer' ? '' : 0) : Number(nv)) : nv;
+      diffs.push({ k, ov, nv });
+    });
+    $('c-' + it.id).classList.toggle('changed', diffs.length > 0);
+    if (diffs.length) out.push({ it, set, diffs });
+  });
+  return out;
+}
+function count() {
+  const c = collect(), n = c.reduce((a, x) => a + x.diffs.length, 0);
+  $('count').textContent = n ? '已修改 ' + c.length + ' 項（' + n + ' 格）' : '沒有修改';
+  $('save').disabled = !n || BUSY; $('undo').disabled = !n || BUSY;
+  OPID = null; // 內容變了 → 下次存是新的一次
+}
+function undoAll() { draw(); count(); say(''); }
+function openDiff() {
+  const c = collect(); if (!c.length) return;
+  $('diffs').innerHTML = c.map(x => x.diffs.map(d =>
+    '<div class="diff">' + esc(x.it.name) + '：' + LABEL[d.k] + '　<s>' + esc(d.ov || '（空白）') + '</s> → <b>' + esc(d.nv || '（空白）') + '</b>' +
+    (AFFECTS[d.k] ? '<span class="aff">⚠️ 會影響預約</span>' : '') + (d.k === 'name' ? '<span class="dim" style="display:block;font-size:1rem">LINE 訊息、管理頁也會用新名字</span>' : '') + '</div>').join('')).join('');
+  $('sheetMsg').innerHTML = ''; $('go').disabled = false; $('go').textContent = '確定儲存';
+  $('mask').classList.add('on');
+}
+function closeDiff() { if (!BUSY) $('mask').classList.remove('on'); }
+async function doSave() {
+  const c = collect(); if (!c.length || BUSY) return;
+  if (!OPID) OPID = 'op-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  const req = { opId: OPID, changes: c.map(x => ({ id: x.it.id, stamp: x.it.stamp, set: x.set })) };
+  BUSY = true; $('go').disabled = true; $('go').textContent = '儲存中…'; $('save').disabled = true;
+  const timer = setTimeout(() => { $('sheetMsg').innerHTML = '<div class="msg warn">還沒確定有沒有存好。可以再按一次「確定儲存」，不會存兩次。</div>'; $('go').disabled = false; $('go').textContent = '確定儲存'; BUSY = false; }, 8000);
+  let r;
+  try { r = await call('apiPriceSave', req); } catch (e) { r = { ok: false, message: '連線失敗：' + e.message }; }
+  clearTimeout(timer); BUSY = false;
+  if (r.ok) {
+    $('mask').classList.remove('on'); OPID = null;
+    DATA.items = r.items; draw(); count(); loadPreview();
+    say('已儲存 ✅ ' + r.applied.length + ' 格' + (r.replayed ? '（剛剛那次就存好了）' : '') + (r.applied.some(a => a.affectsBooking) ? '，預約系統已經用新的設定' : ''), 'ok');
+    window.scrollTo(0, 0); return;
+  }
+  $('go').disabled = false; $('go').textContent = '確定儲存';
+  if (r.code === 'VERSION') { $('mask').classList.remove('on'); load(['「' + esc((r.extra && r.extra.latest && r.extra.latest.name) || '') + '」剛剛在別的地方被改過了，畫面已經換成最新的。你剛剛的修改沒有存，請再改一次。', 'bad']); return; }
+  if (r.code === 'BAD_INPUT' && r.extra && r.extra.id) {
+    const el = $('f-' + r.extra.id + '-' + r.extra.field); if (el) { el.classList.add('err'); if (el.closest('[id^="a-"]')) el.closest('[id^="a-"]').style.display = 'block'; }
+  }
+  $('sheetMsg').innerHTML = '<div class="msg bad">' + esc(r.message || '存不起來') + '</div>';
+}
+
+// 海報預覽：有景序的海報頁就嵌它；沒有就用簡易預覽
+async function loadPreview() {
+  const fr = $('frame');
+  if (POSTER) {
+    fr.innerHTML = '<iframe id="pf" src="' + esc(POSTER + (POSTER.indexOf('?') < 0 ? '?' : '&') + 'preview=1&t=' + Date.now()) + '"></iframe>';
+    fit();
+    $('pdf').innerHTML = '<a href="' + esc(POSTER + (POSTER.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now()) + '" target="_blank"><button>輸出送印 PDF（開新分頁）</button></a>' +
+      '<div class="dim" style="margin-top:6px">用電腦版 Chrome 打開 → 列印 → 另存為 PDF：紙張 420×600 mm、邊界「無」、勾「背景圖形」。</div>';
+    return;
+  }
+  $('pdf').innerHTML = '<div class="dim">景序的海報頁還沒放上去（Settings 的 POSTER_URL 是空的），先看簡易預覽。</div>';
+  try {
+    const p = await call('apiPosterPreview');
+    if (!p.ok) { fr.innerHTML = '<div class="msg bad">' + esc(p.message) + '</div>'; return; }
+    fr.innerHTML = '<div class="mini"><div style="font-size:1.3rem;font-weight:700;text-align:center">雅麗髮藝　價目表</div>' + p.categories.map(c =>
+      '<h4>' + esc(c.name) + '</h4>' + c.items.map(i => '<div class="it"><span>' + esc(i.name) + '</span><span>' + esc(i.price) + '</span></div>' + (i.note ? '<div class="nt">' + esc(i.note) + '</div>' : '')).join('')).join('') + '</div>';
+  } catch (e) { fr.innerHTML = '<div class="msg bad">' + esc(e.message) + '</div>'; }
+}
+function fit() { // 420×600 mm 的頁面（約 1587×2268 px）等比縮進框裡
+  const f = $('pf'); if (!f) return;
+  const W = 1587, H = 2268, s = $('frame').clientWidth / W;
+  f.style.width = W + 'px'; f.style.height = H + 'px'; f.style.transform = 'scale(' + s + ')';
+}
+window.addEventListener('resize', fit);
+if (KEY) load(); else $('list').textContent = '請用元家給的連結打開管理頁。';
+</script>
+</body></html>
