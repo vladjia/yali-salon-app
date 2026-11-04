@@ -10,6 +10,15 @@
   document.body.append(dialog);
   let operation=null;
   const safe=s=>h(s);
+  function since(value) {
+    if(!value)return '';
+    const stamp=String(value),time=Date.parse(stamp.replace(' ','T')+'+08:00');
+    if(!Number.isFinite(time))return stamp;
+    const minutes=Math.floor((Date.now()-time)/60000);
+    if(minutes<0)return stamp;
+    const age=minutes<1?'剛剛':minutes<60?minutes+' 分鐘前':minutes<1440?Math.floor(minutes/60)+' 小時前':Math.floor(minutes/1440)+' 天前';
+    return age+' · '+stamp;
+  }
   const busy=()=>Boolean(S.dialog || dialog.open || document.querySelector('#priceAppFrame:not([hidden])') || document.activeElement?.matches('input,select,textarea'));
   function errorText(r) {
     const map={ALREADY:'這個 LINE 已經連上客人，請重新整理名單。',CONFLICT:'這位客人已經有另一個 LINE，請確認後再處理。',NOT_FOUND:'這筆名單已經處理過，請重新整理。',BAD_INPUT:'請確認客人稱呼、手機和選擇的項目。',BUSY:'系統正在處理，稍等幾秒再按一次。',BAD_FN:'後端還沒更新這個功能，請元家確認部署版本。',FORBIDDEN:'請用元家給的連結打開。'};
@@ -21,7 +30,7 @@
     panel.className='line-links-compact';
     panel.hidden=!state.items.length&&!state.autoLinked.length;
     if(panel.hidden){panel.replaceChildren();return;}
-    panel.innerHTML=`${state.items.length ? `<details id="linePendingDetails" ${pendingOpen?'open':''}><summary>有 ${state.items.length} 位 LINE 客人還沒連上</summary><div class="line-link-list">${state.items.map((item,i)=>`<article class="line-link-row"><strong>${safe(item.name || 'LINE 訪客')}</strong><p class="line-last-text">${safe(item.lastText || '剛加入好友，還沒有留言')}</p><p class="small">${safe(item.lastAt || item.firstAt || '')}</p><div class="line-link-actions"><button type="button" class="primary" data-link-index="${i}">連到客人</button><button type="button" data-ignore-index="${i}">不是客人</button></div></article>`).join('')}<button type="button" id="refreshLineLinks">↻ 更新名單</button></div></details>` : ''}
+    panel.innerHTML=`${state.items.length ? `<details id="linePendingDetails" ${pendingOpen?'open':''}><summary>有 ${state.items.length} 位 LINE 客人還沒連上</summary><div class="line-link-list">${state.items.map((item,i)=>`<article class="line-link-row"><strong>${safe(item.name || 'LINE 訪客')}</strong><p class="line-last-text">${safe(item.lastText || '剛加入好友，還沒有留言')}</p><p class="small">${safe(since(item.lastAt || item.firstAt))}</p><div class="line-link-actions"><button type="button" class="primary" data-link-index="${i}">連到客人</button><button type="button" data-ignore-index="${i}">不是客人</button></div></article>`).join('')}<button type="button" id="refreshLineLinks">↻ 更新名單</button></div></details>` : ''}
       ${state.autoLinked.length ? `<details id="lineAutoDetails" ${autoOpen?'open':''}><summary>最近 14 天有 ${state.autoLinked.length} 位客人自動連上 LINE</summary><div>${state.autoLinked.map((item,i)=>`<article class="line-link-row"><strong>✅ ${safe(item.customerName || '客人')} 已自動連上 LINE</strong><p class="small">${safe(item.name ? 'LINE 名稱：'+item.name : 'LINE 未設定顯示名稱')}<br>${safe(item.at || '')}</p><button type="button" class="danger" data-unlink-index="${i}">不是本人，取消</button></article>`).join('')}${!state.items.length?'<button type="button" id="refreshLineLinks">↻ 更新名單</button>':''}</div></details>` : ''}<p class="small" id="lineLinksStatus" role="status"></p>`;
   }
   async function refresh(force=false) {
