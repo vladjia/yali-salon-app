@@ -6,14 +6,17 @@
  let info=null,sub=null,busy=false,registered=false,message='',offEndpoint='',settingsOpen=false,confirmOff=false;
  function render(){
   panel.hidden=!KEY;if(panel.hidden)return;
-  if(!standalone()){panel.innerHTML='<p class="small">🔔 先加到主畫面，再從主畫面開啟，就能設定通知。</p>';return;}
-  if(!supported()){panel.innerHTML='<p class="small">這個裝置或瀏覽器暫不支援 App 通知。</p>';return;}
-  const denied=Notification.permission==='denied';
-  if(registered){
-   panel.innerHTML=`<div class="push-status-line"><span class="small">✅ 通知已開啟</span><button type="button" class="push-settings-toggle" data-push="settings" aria-expanded="${settingsOpen}" aria-controls="pushOptions">設定</button></div>${settingsOpen?`<div id="pushOptions" class="push-options">${message?`<p class="small" role="status">${h(message)}</p>`:''}${confirmOff?'<p>關掉之後，有新的預約申請時手機不會提醒您。確定要關嗎？</p><div class="push-actions"><button type="button" data-push="keep">先不要</button><button type="button" class="danger" data-push="off">確定關閉</button></div>':'<div class="push-actions"><button type="button" data-push="test">送一則測試</button><button type="button" data-push="ask-off">關閉通知</button></div>'}</div>`:''}`;
-  }else{
-   panel.innerHTML=`<p class="small" role="status">${h(message|| (denied?'通知權限已關閉，請到手機或瀏覽器設定允許通知。':info?.on&&info?.publicKey?'有新申請或改期消息，讓手機提醒您。':'通知還沒設定好，請元家確認設定。'))}</p><div class="push-actions">${offEndpoint?'<button type="button" data-push="off">重試關閉通知</button>':info?.on&&info?.publicKey&&!denied?'<button type="button" data-push="on">🔔 開啟通知</button>':''}${!info?'<button type="button" data-push="refresh">重新檢查</button>':''}</div>`;
+  const canPush=standalone()&&supported();
+  const denied=canPush&&Notification.permission==='denied';
+  let status='',controls='';
+  if(!standalone())status='🔔 先加到主畫面，再從主畫面開啟，就能設定通知。';
+  else if(!supported())status='這個裝置或瀏覽器暫不支援 App 通知。';
+  else{
+   status=message||(registered?'✅ 通知已開啟':denied?'通知權限已關閉，請到手機或瀏覽器設定允許通知。':info?.on&&info?.publicKey?'有新申請或改期消息，讓手機提醒您。':'通知還沒設定好，請元家確認設定。');
+   controls=registered?(confirmOff?'<p>關掉之後，有新的預約申請時手機不會提醒您。確定要關嗎？</p><div class="push-actions"><button type="button" data-push="keep">先不要</button><button type="button" class="danger" data-push="off">確定關閉</button></div>':'<div class="push-actions"><button type="button" data-push="test">送一則測試</button><button type="button" data-push="ask-off">關閉通知</button></div>'):offEndpoint?'<button type="button" data-push="off">重試關閉通知</button>':info?.on&&info?.publicKey&&!denied?'<button type="button" data-push="on">🔔 開啟通知</button>':'';
+   if(!info)controls+='<button type="button" data-push="refresh">重新檢查</button>';
   }
+  panel.innerHTML=`<div class="push-status-line"><button type="button" class="push-settings-toggle" data-push="settings" aria-expanded="${settingsOpen}" aria-controls="pushOptions">設定</button></div>${!registered&&!settingsOpen?`<p class="small" role="status">${h(status)}</p><div class="push-actions">${controls}</div>`:''}${settingsOpen?`<div id="pushOptions" class="push-options"><a class="button-link guide-link" href="guide.html" target="_self">📖 使用小抄</a><p class="small" role="status">${h(status)}</p>${controls}</div>`:''}`;
   panel.querySelectorAll('[data-push]').forEach(button=>{button.disabled=busy;button.onclick=()=>act(button.dataset.push);});
  }
  function keyBytes(value){const s=value.replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(s+'='.repeat((4-s.length%4)%4)),c=>c.charCodeAt(0));}

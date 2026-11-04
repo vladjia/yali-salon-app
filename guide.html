@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>雅麗預約小抄</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* 版面：手機一欄。像一本小小的店內手冊——紙色底、酒紅點綴，每件事一張，按鈕畫成 App 裡的樣子 */
+:root {
+  --paper: #f8f5ef;
+  --card: #fffdf8;
+  --ink: #34302a;
+  --dim: #6f675c;
+  --line: #e2d9cb;
+  --wine: #810112;
+  --gold: #a88a57;
+  --ok: #2f6b4a;
+  --chip: #f1ebe0;
+  --serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #1d1a17; --card: #26221e; --ink: #efe8dc; --dim: #b6ab9b; --line: #3d3630; --wine: #e3828c; --gold: #cdb284; --ok: #8fcfa8; --chip: #332d27; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #1d1a17; --card: #26221e; --ink: #efe8dc; --dim: #b6ab9b; --line: #3d3630; --wine: #e3828c; --gold: #cdb284; --ok: #8fcfa8; --chip: #332d27; color-scheme: dark }
+
+body { background: var(--paper); color: var(--ink); font: 400 1.15rem/1.8 var(--sans);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 40rem; margin: 0 auto; padding-block: 2.2rem 4rem; display: grid; gap: 2.4rem; }
+h1, h2, h3 { font-family: var(--serif); text-wrap: balance; margin: 0; line-height: 1.35; }
+p { margin: 0; }
+.eyebrow { font: 500 .78rem/1 var(--sans); letter-spacing: .28em; color: var(--gold); text-transform: uppercase; }
+
+header { display: grid; gap: .9rem; padding-bottom: 1.6rem; border-bottom: 1px solid var(--line); }
+header h1 { font-size: 2.3rem; color: var(--wine); }
+header .lead { font-size: 1.2rem; color: var(--dim); }
+
+.first { background: var(--card); border: 1.5px solid var(--wine); border-radius: 16px; padding: 1.2rem 1.3rem; display: grid; gap: .5rem; }
+.first strong { color: var(--wine); font-size: 1.2rem; }
+
+section { display: grid; gap: 1.1rem; }
+section > h2 { font-size: 1.55rem; display: flex; align-items: baseline; gap: .7rem; }
+section > h2 small { font: 500 .85rem/1 var(--sans); color: var(--dim); letter-spacing: .08em; }
+
+.task { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem 1.25rem 1.3rem; display: grid; gap: .75rem; }
+.task h3 { font-size: 1.35rem; }
+.task .why { color: var(--dim); font-size: 1.02rem; }
+ol { margin: 0; padding-left: 1.5rem; display: grid; gap: .45rem; }
+ol li::marker { color: var(--wine); font-weight: 700; }
+ul.plain { margin: 0; padding-left: 1.2rem; display: grid; gap: .35rem; }
+
+.btn { display: inline-block; font: 500 1rem/1.3 var(--sans); padding: .28rem .7rem; margin: .1rem .1rem; border-radius: 9px;
+  border: 1.5px solid var(--line); background: var(--chip); color: var(--ink); white-space: nowrap; }
+.btn.go { background: var(--wine); border-color: var(--wine); color: var(--card); }
+.btn.good { background: var(--ok); border-color: var(--ok); color: var(--card); }
+.tag { display: inline-block; font: 500 .95rem/1.3 var(--sans); padding: .1rem .55rem; border-radius: 99px; background: var(--chip); color: var(--ink); }
+.tag.warn { color: var(--wine); }
+.tag.ok { color: var(--ok); }
+.note { border-left: 3px solid var(--gold); padding: .2rem 0 .2rem .9rem; color: var(--dim); font-size: 1.02rem; }
+
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.menu div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: .8rem .9rem; display: grid; gap: .2rem; }
+.menu b { font-family: var(--serif); color: var(--wine); font-size: 1.15rem; }
+.menu span { font-size: .98rem; color: var(--dim); line-height: 1.55; }
+
+.letter { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 1.6rem 1.4rem; display: grid; gap: 1rem; }
+.letter h2 { font-size: 1.5rem; color: var(--wine); }
+.letter p { font-size: 1.12rem; }
+.letter .sign { text-align: right; font-family: var(--serif); color: var(--dim); }
+.team { display: grid; gap: .75rem; }
+.member { display: grid; grid-template-columns: 3.2rem 1fr; gap: .9rem; align-items: start; }
+.member .seal { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1.5px solid var(--gold); display: grid; place-items: center;
+  font: 700 1.25rem/1 var(--serif); color: var(--wine); background: var(--paper); }
+.member b { font-family: var(--serif); font-size: 1.15rem; }
+.member p { color: var(--dim); font-size: 1.02rem; line-height: 1.65; min-width: 0; }
+footer { text-align: center; color: var(--dim); font-size: .95rem; }
+@media (max-width: 420px) { header h1 { font-size: 2rem; } .menu { grid-template-columns: 1fr; } }
+</style>
+
+<style>.back{display:inline-block;margin:4px 0 14px;padding:12px 18px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--wine);font-weight:700;text-decoration:none;font-size:17px}
+@media print{body{font-size:15px} .task,.letter,.first{break-inside:avoid} .back{display:none}}</style>
+</head><body>
+
+<div class="wrap">
+<a class="back" href="./">← 回到雅麗預約</a>
+
+<header>
+  <p class="eyebrow">YALI · SALON DESIGN</p>
+  <h1>雅麗預約小抄</h1>
+  <p class="lead">給雅麗媽媽。預約簿從紙本搬進手機了，以前用筆寫的事，現在用手指點一點就好。</p>
+</header>
+
+<div class="first">
+  <strong>先記住這一句就好</strong>
+  <p>按下去之後，畫面會先出現「儲存中」，等它變成<span class="tag ok">修改完成</span>才算好了。如果出現「還沒確定有沒有改成功」，就按<span class="btn">重新確認</span>，不要一直重按。有不懂的地方，隨時問元家。</p>
+</div>
+
+<section>
+  <h2>每天會用到的<small>7 件事</small></h2>
+
+  <div class="task">
+    <h3>打開 App</h3>
+    <p>點手機主畫面上的「雅麗」圖示。一打開，看到的就是今天的預約。</p>
+  </div>
+
+  <div class="task">
+    <h3>看預約</h3>
+    <ol>
+      <li>上面有<span class="btn">今天</span><span class="btn">明天</span><span class="btn">選日期</span>，也可以按<span class="btn">‹ 前一天</span><span class="btn">後一天 ›</span>。</li>
+      <li>每一筆會寫時間、客人、做什麼項目。旁邊的小字看狀態：<span class="tag">已確認</span><span class="tag warn">申請中（要確認）</span><span class="tag warn">客人想改時間</span></li>
+    </ol>
+    <p class="why">固定客（例如黃小姐）會自己出現在她固定的那幾天，不用每次重寫。</p>
+  </div>
+
+  <div class="task">
+    <h3>處理 LINE 新申請</h3>
+    <ol>
+      <li>首頁最上面出現「有 2 筆 LINE 新申請」，點開。</li>
+      <li>按<span class="btn">查看申請</span>，會跳到那一天、停在那一筆。</li>
+      <li>可以就按<span class="btn good">確認申請</span>；不行就按<span class="btn">拒絕</span>。</li>
+    </ol>
+    <p class="why">客人會自動在 LINE 收到「預約成功」或「這個時間沒辦法」，您不用再另外回。</p>
+  </div>
+
+  <div class="task">
+    <h3>改時間</h3>
+    <ol>
+      <li>在那一筆按<span class="btn go">更改時間</span>。</li>
+      <li>點上面的快捷（往後 30 分、往後 1 小時、明天同時間），或點下面的時間。</li>
+      <li>看清楚「原本 → 改成」，按<span class="btn good">確定更改</span>，等它說<span class="tag ok">修改完成</span>。</li>
+    </ol>
+    <p class="why">客人的 LINE 會收到新時間的卡片。客人回覆後，這一筆會寫<span class="tag ok">客人說好</span>或<span class="tag warn">客人想改時間</span>。電話客人沒有 LINE，記得打電話跟他說。</p>
+  </div>
+
+  <div class="task">
+    <h3>新增預約（電話、現場、LINE 留言的客人）</h3>
+    <ol>
+      <li>按<span class="btn">＋ 新增預約</span>。</li>
+      <li>選客人：剛剛傳 LINE 來的人排在最上面；老客人從清單選；新客人就填稱呼和電話。</li>
+      <li>勾要做的項目，選日期和開始時間。</li>
+      <li>按<span class="btn good">＋ 確定新增預約</span>。</li>
+    </ol>
+    <p class="why">選「剛剛傳 LINE 來的人」最好，之後改時間，系統就能幫您通知他。</p>
+  </div>
+
+  <div class="task">
+    <h3>固定客這週不一樣</h3>
+    <ol>
+      <li>點那位固定客的那一格。</li>
+      <li>只有這週變：選<span class="btn">只改這一次</span>或<span class="btn">這次不來</span>。</li>
+      <li>以後都要換時間：選<span class="btn">以後都改</span>。</li>
+    </ol>
+    <p class="why">不小心按了「這次不來」？那一格會變成灰色，按<span class="btn">恢復</span>就回來了。</p>
+  </div>
+
+  <div class="task">
+    <h3>改價錢</h3>
+    <ol>
+      <li>首頁按<span class="btn">價目表</span>。</li>
+      <li>找到那一項，改價格（「1000起」「700/片」這樣寫也可以）。</li>
+      <li>存檔前，畫面會列出您改了哪些，看過沒問題再存。</li>
+    </ol>
+    <p class="why">LINE 上的價目和店裡的海報會跟著一起更新。</p>
+  </div>
+</section>
+
+<section>
+  <h2>偶爾才會用到的</h2>
+
+  <div class="task">
+    <h3>LINE 客人還沒連上</h3>
+    <p>首頁有一行小字「有 3 位 LINE 客人還沒連上」。意思是：這幾位傳了 LINE 來，系統還不知道他是哪一位客人。</p>
+    <ol>
+      <li>點那行小字，看是誰、他最後說了什麼。</li>
+      <li>是熟客或新客人：按<span class="btn go">連到客人</span>，選他的名字，或幫他建一位新客人。</li>
+      <li>是廣告、打錯的：按<span class="btn">不是客人</span>。</li>
+    </ol>
+    <p class="why">連上之後，您改他的時間，他的 LINE 才會自動收到通知。大部分客人系統會自己連好，只有少數要您幫忙。</p>
+  </div>
+
+  <div class="task">
+    <h3>手機跳通知</h3>
+    <ul class="plain">
+      <li>「雅麗：有新的預約申請」：有客人在 LINE 約了，點一下打開 App 確認。</li>
+      <li>「雅麗：客人說時間不方便」：您改過時間的客人說不方便，點進去再幫他換一個。</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>客人在 LINE 看到的</h2>
+  <p>客人打開雅麗的 LINE，下面有四個大按鈕，都是用點的，不用打字：</p>
+  <div class="menu">
+    <div><b>我要預約</b><span>選項目、選加購、選日期、選時間，最後送出申請</span></div>
+    <div><b>服務項目</b><span>看所有項目和最新價目</span></div>
+    <div><b>LINE 通話</b><span>直接打給雅麗</span></div>
+    <div><b>我的預約</b><span>看自己約了什麼時間</span></div>
+  </div>
+  <p class="note">客人只能約 7 天以後到 60 天內。想約這幾天的，系統會請他按「LINE 通話」或直接留言給您。客人送出的是「申請」，您按了確認才算約好。平常跟客人聊天，就跟以前一樣用 LINE 聊。</p>
+</section>
+
+<section class="letter">
+  <p class="eyebrow">寫給雅麗媽媽</p>
+  <h2>這份禮物，是元家做的</h2>
+  <p>雅麗媽媽您好，我是慎言。</p>
+  <p>這幾天，元家白天上班，晚上回到家就打開電腦，跟我們一起把您的預約簿搬進手機。有好幾個晚上弄到天亮，我叫他去睡，他才肯去睡。</p>
+  <p>他一直交代我們一件事：「不要讓媽媽學太難的東西。」所以這個 App 裡的每一顆按鈕，都是照您原本的做法排的，只是把筆換成手指。</p>
+  <p>有一次，我們在客人看的 LINE 訊息裡寫了「請跟媽媽說」，元家馬上糾正我們：「客人不會叫她媽媽，要叫雅麗。」這麼小的地方，他也替您想好了。</p>
+  <p>他還說：「我要教媽媽釣魚，不是給她魚。」他相信您一定學得會，也希望以後就算他不在旁邊，您也可以自己來。</p>
+  <p>規則是您定的，題目是元家出的，每一個步驟都是他一個一個試過的。我們只是在旁邊幫忙的人。用起來哪裡不順手，跟元家說，我們再一起改。</p>
+  <p class="sign">慎言　敬上</p>
+</section>
+
+<section>
+  <h2>元家都跟誰「成群結黨」</h2>
+  <p>我們是元家的 AI 夥伴，團隊叫做 <b>CONTINUE</b>。這次幫雅麗做事的有：</p>
+  <div class="team">
+    <div class="member"><div class="seal">家</div><div><b>元家</b><p>出題目、做決定的人。白天上班，晚上帶著大家一步一步做，每個按鈕都親手按過、抓出好幾個問題。</p></div></div>
+    <div class="member"><div class="seal">瑀</div><div><b>心瑀</b><p>最早陪元家規劃這套系統，也寫了第一版 LINE 的歡迎訊息。最近正和元家一起準備一場講座。</p></div></div>
+    <div class="member"><div class="seal">景</div><div><b>景序</b><p>負責所有您看得到的樣子：這個 App、店裡的價目海報、LINE 上的卡片、App 的圖示，還有 LINE 下面那四個大按鈕。</p></div></div>
+    <div class="member"><div class="seal">慎</div><div><b>慎言</b><p>負責看不到的後台：排時間、算空檔、LINE 通知、手機推播，還有一遍一遍的檢查和測試。</p></div></div>
+  </div>
+  <p class="note">CONTINUE 裡還有寫歌的絃安、畫圖表的川仔等夥伴。下次元家又熬夜，您就知道他是跟誰在一起了。</p>
+</section>
+
+<footer>雅麗髮藝｜預約小抄・2026 年 11 月</footer>
+<p style="text-align:center;margin-top:24px"><a class="back" href="./">← 回到雅麗預約</a></p>
+</div>
+
+</body></html>
