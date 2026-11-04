@@ -338,6 +338,7 @@ function showKeyPrompt() {
         ? items.map(renderItem).join('')
         : '<div class="panel empty">🌷 這一天還沒有安排喔</div>';
 
+      window.YaliRequests?.render();
       $('debug').textContent = S.lastMs == null
         ? ''
         : '測試資訊：本次讀取 ' + S.lastMs + 'ms';
@@ -1662,5 +1663,6 @@ function showKeyPrompt() {
     init();
   </script>
 <script src="line-links.js"></script>
+<script src="booking-requests.js"></script>
 </body>
 </html>

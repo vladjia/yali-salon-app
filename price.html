@@ -113,10 +113,10 @@ const F = [
   ['cat', '類別', 'text', 'base'], ['name', '名稱', 'text', 'base'], ['price', '顯示價格（可以打「1000起」「700/片」）', 'text', 'base'],
   ['posterShow', '海報顯示', 'bool', 'poster'], ['posterNote', '海報備註（印在海報上的小字）', 'text', 'poster'],
   ['normal', '一般時間（分鐘）', 'num', 'booking'], ['longest', '最長時間（分鐘）', 'num', 'booking'], ['buffer', '整理時間（分鐘，空白＝預設 20）', 'num', 'booking'],
-  ['line', 'LINE 可以約', 'bool', 'booking'], ['addon', '加購', 'bool', 'booking'], ['order', '排序（數字小的排前面）', 'num', 'booking']
+  ['line', 'LINE 可以約', 'bool', 'booking'], ['addon', '加購', 'bool', 'booking'], ['addonOnly', '只能加購', 'bool', 'booking'], ['order', '排序（數字小的排前面）', 'num', 'booking']
 ];
-const LABEL = { cat: '類別', name: '名稱', price: '價格', posterShow: '海報顯示', posterNote: '海報備註', normal: '一般時間', longest: '最長時間', buffer: '整理時間', line: 'LINE 可約', addon: '加購', order: '排序' };
-const AFFECTS = { normal: 1, buffer: 1, line: 1 };
+const LABEL = { cat: '類別', name: '名稱', price: '價格', posterShow: '海報顯示', posterNote: '海報備註', normal: '一般時間', longest: '最長時間', buffer: '整理時間', line: 'LINE 可約', addon: '加購', addonOnly: '只能加購', order: '排序' };
+const AFFECTS = { normal: 1, buffer: 1, line: 1, addonOnly: 1 };
 let DATA = null, OPID = null, BUSY = false;
 
 function norm(k, v) { // 統一成字串比較
@@ -136,6 +136,7 @@ async function load(note) {
 }
 function field(it, f) {
   const [k, label, t] = f, id = 'f-' + it.id + '-' + k, v = norm(k, it[k]);
+  if (k === 'addonOnly') return '<label for="' + id + '" style="display:flex;align-items:center;gap:12px"><input type="checkbox" id="' + id + '" data-id="' + it.id + '" data-k="' + k + '" onchange="count()" style="width:24px;height:24px;min-height:24px;flex:none"' + (it[k] ? ' checked' : '') + '>只能加購</label><p class="dim">勾選後，客人在 LINE 只能於加購步驟選擇，不能單獨預約；「加購」決定它是否出現在加購步驟。</p>';
   if (t === 'bool') return '<label for="' + id + '">' + label + '</label><select id="' + id + '" data-id="' + it.id + '" data-k="' + k + '" onchange="count()"' + (f[3] === 'poster' && !DATA.posterColumns ? ' disabled' : '') + '><option' + (v === '是' ? ' selected' : '') + '>是</option><option' + (v === '否' ? ' selected' : '') + '>否</option></select>';
   return '<label for="' + id + '">' + label + '</label><input id="' + id + '" data-id="' + it.id + '" data-k="' + k + '" value="' + esc(v) + '"' + (t === 'num' ? ' inputmode="numeric"' : '') + (k === 'cat' ? ' list="cats"' : '') + (f[3] === 'poster' && !DATA.posterColumns ? ' disabled' : '') + ' oninput="count()">';
 }
@@ -150,7 +151,7 @@ function draw() {
         '<div class="grp"><h3>海報</h3>' + F.filter(f => f[3] === 'poster').map(f => field(it, f)).join('') + '</div>' +
         '<div class="grp booking"><h3>⚠️ 預約系統（會影響客人能約的時間）</h3><div class="dim">已經排好的預約不會變，只影響之後的空檔。</div>' +
           '<div class="row2">' + F.filter(f => ['normal', 'longest'].includes(f[0])).map(f => '<div>' + field(it, f) + '</div>').join('') + '</div>' +
-          F.filter(f => ['buffer', 'line', 'addon', 'order'].includes(f[0])).map(f => field(it, f)).join('') +
+          F.filter(f => ['buffer', 'line', 'addon', 'addonOnly', 'order'].includes(f[0])).map(f => field(it, f)).join('') +
         '</div>' +
       '</div></div>';
   });
@@ -163,7 +164,7 @@ function collect() { // 找出改了哪些
     const set = {}, diffs = [];
     F.forEach(([k, , t]) => {
       const el = $('f-' + it.id + '-' + k); if (!el || el.disabled) return;
-      const nv = el.value.trim(), ov = norm(k, it[k]);
+      const nv = el.type === 'checkbox' ? (el.checked ? '是' : '否') : el.value.trim(), ov = norm(k, it[k]);
       el.classList.toggle('chg', nv !== ov); el.classList.remove('err');
       if (nv === ov) return;
       set[k] = t === 'bool' ? nv === '是' : t === 'num' ? (nv === '' ? (k === 'buffer' ? '' : 0) : Number(nv)) : nv;
@@ -209,6 +210,10 @@ async function doSave() {
   if (r.code === 'VERSION') { $('mask').classList.remove('on'); load(['「' + esc((r.extra && r.extra.latest && r.extra.latest.name) || '') + '」剛剛在別的地方被改過了，畫面已經換成最新的。你剛剛的修改沒有存，請再改一次。', 'bad']); return; }
   if (r.code === 'BAD_INPUT' && r.extra && r.extra.id) {
     const el = $('f-' + r.extra.id + '-' + r.extra.field); if (el) { el.classList.add('err'); if (el.closest('[id^="a-"]')) el.closest('[id^="a-"]').style.display = 'block'; }
+  }
+  if (r.code === 'SCHEMA') {
+    $('sheetMsg').innerHTML = '<div class="msg bad">試算表欄位還沒準備好，這次尚未儲存。請元家先在 GAS 跑「建立雅麗試算表」，再回來重試。</div>';
+    return;
   }
   $('sheetMsg').innerHTML = '<div class="msg bad">' + esc(r.message || '存不起來') + '</div>';
 }
