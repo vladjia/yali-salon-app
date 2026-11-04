@@ -1,36 +1,22 @@
-/* Pending customer applications. This reminder never approves anything by itself. */
+/* Dedicated pending list, independent of the selected date. */
 (()=>{
-  const panel=document.createElement('section');panel.id='bookingRequests';panel.className='panel';panel.hidden=true;
-  document.querySelector('main .header').after(panel);
-  let cached=[],loading=false,again=false,failed=false;
-  function pending(days){const seen=new Set(),list=[];days.forEach(day=>(day.items||[]).forEach(item=>{if(item.kind==='booking'&&item.booking?.status==='PENDING'&&!seen.has(item.id)){seen.add(item.id);list.push({id:item.id,date:day.date,start:item.start,name:item.customer?.name||'客人'});}}));return list;}
-  async function refresh(){
-    if(!KEY||!S.today)return;
-    if(loading){again=true;return;}
-    loading=true;
-    try{
-      // apiDays caps one request at 31 days; background reads cover day 0..60.
-      const results=await Promise.all([call('apiDays',S.today,31),call('apiDays',plusDays(S.today,31),30)]);
-      if(results.some(r=>!r?.ok||!Array.isArray(r.days)))throw Error('read failed');
-      cached=pending(results.flatMap(r=>r.days));failed=false;
-    }catch(e){failed=true;}
-    finally{loading=false;if(!refreshBusy())render();if(again){again=false;refresh();}}
-  }
-  function render(){
-    const open=panel.querySelector('details')?.open;
-    const visibleDates=new Set(S.days.map(d=>d.date));
-    const list=[...cached.filter(i=>!visibleDates.has(i.date)),...pending(S.days)].sort((a,b)=>a.start.localeCompare(b.start));
-    panel.hidden=!list.length&&!failed;
-    if(panel.hidden){panel.replaceChildren();return;}
-    panel.innerHTML=`${list.length?`<details ${open?'open':''}><summary>有 ${list.length} 筆 LINE 新申請</summary><div class="request-list">${list.map((item,i)=>`<div class="request-row"><div><strong>${h(item.name)}</strong><p class="small">${h(item.start)}</p></div><button type="button" data-request-index="${i}">查看申請</button></div>`).join('')}</div></details>`:''}${failed?'<p class="small" role="status">其他日期的申請提醒暫時更新不到，請按上方「更新」重試。</p>':''}`;
-    panel.querySelectorAll('[data-request-index]').forEach(button=>button.onclick=async()=>{
-      const item=list[Number(button.dataset.requestIndex)];
-      await showDay(item.date);
-      const confirm=document.querySelector('[data-act="transition"][data-to="CONFIRMED"][data-id="'+CSS.escape(item.id)+'"]');
-      const article=confirm?.closest('.appointment');
-      if(article){article.classList.add('pending-highlight');article.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'center'});confirm.focus({preventScroll:true});setTimeout(()=>article.classList.remove('pending-highlight'),3500);}
-    });
-  }
-  window.YaliRequests={render,refresh};render();if(S.today)refresh();
-  document.addEventListener('focusout',()=>{if(!refreshBusy())setTimeout(render,0);});
+ const panel=document.createElement('section');panel.id='bookingRequests';panel.className='panel';panel.hidden=true;document.querySelector('main .header').after(panel);
+ let items=[],loading=false,again=false,error='';
+ async function refresh(){
+  if(!KEY)return;if(loading){again=true;return;}loading=true;
+  try{const r=await call('apiPendingList');if(!r?.ok||!Array.isArray(r.items))throw Error(r?.code==='BAD_FN'?'新申請功能還沒更新，請元家確認後端部署。':'新申請暫時更新不到，請按上方「更新」重試。');items=r.items;error='';}
+  catch(e){error=e.message||'新申請更新失敗，請稍後再試。';}
+  finally{loading=false;if(!refreshBusy())render();if(again){again=false;refresh();}}
+ }
+ function render(){
+  const open=panel.querySelector('details')?.open;panel.hidden=!items.length&&!error;if(panel.hidden){panel.replaceChildren();return;}
+  panel.innerHTML=`${items.length?`<details ${open?'open':''}><summary>🔔 有 ${items.length} 筆新申請</summary><div class="request-list">${items.map((item,i)=>`<article class="request-row pending-request"><div><strong>${h(item.customer?.name||'客人')}</strong><p class="small">${h(item.start)} ～ ${h((item.end||'').slice(11))}</p><p>${h((item.services||[]).join(' ＋ '))}</p>${item.holdExpired?'<p class="pending-expired">保留時間過了，確認前會重新檢查時段。</p>':''}<p class="small">申請時間：${h(item.createdAt||'')}</p></div><div class="pending-actions"><button type="button" class="good" data-pending-index="${i}" data-pending-to="CONFIRMED">確認申請</button><button type="button" class="danger" data-pending-index="${i}" data-pending-to="REJECTED">拒絕</button></div></article>`).join('')}</div></details>`:''}${error?`<p class="small" role="status">${h(error)}${items.length?' 目前保留上次讀到的清單。':''}</p>`:''}`;
+  panel.querySelectorAll('[data-pending-index]').forEach(button=>button.onclick=()=>{
+   const item=items[Number(button.dataset.pendingIndex)],to=button.dataset.pendingTo;
+   const adapted={kind:'booking',id:item.id,start:item.start,end:item.end,customer:item.customer,services:item.services,booking:{...item.booking,id:item.id,version:item.version}};
+   openSimple(adapted,'transition',to==='CONFIRMED'?'要確認這筆預約申請嗎？':'確定要拒絕這筆申請嗎？',{to,danger:to==='REJECTED'});
+  });
+ }
+ window.YaliRequests={render,refresh};render();refresh();
+ document.addEventListener('focusout',()=>setTimeout(()=>{if(!refreshBusy())render();},0));
 })();

@@ -279,6 +279,7 @@ function showKeyPrompt() {
         renderHome();
         window.YaliLineLinks?.refresh();
         window.YaliRequests?.refresh();
+        window.YaliPush?.refresh();
         if (automatic) window.scrollTo(scrollBefore.x, scrollBefore.y);
         return true;
       } catch (err) {
@@ -1665,5 +1666,6 @@ function showKeyPrompt() {
   </script>
 <script src="line-links.js"></script>
 <script src="booking-requests.js"></script>
+<script src="push-settings.js"></script>
 </body>
 </html>
