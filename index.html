@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="雅麗日常">
   <meta name="referrer" content="no-referrer">
-  <link rel="stylesheet" href="line-links.css?v=12">
-  <link rel="manifest" href="manifest.webmanifest?v=12">
-  <link rel="apple-touch-icon" href="icons/icon-180-v2.png?v=12">
-  <link rel="icon" href="icons/icon-192-v2.png?v=12">
-  <script src="connection.js?v=12"></script><link rel="stylesheet" href="send-feedback.css?v=12"><script src="send-feedback.js?v=12"></script>
+  <link rel="stylesheet" href="line-links.css?v=13">
+  <link rel="manifest" href="manifest.webmanifest?v=13">
+  <link rel="apple-touch-icon" href="icons/icon-180-v2.png?v=13">
+  <link rel="icon" href="icons/icon-192-v2.png?v=13">
+  <script src="connection.js?v=13"></script><link rel="stylesheet" href="send-feedback.css?v=13"><script src="send-feedback.js?v=13"></script>
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -31,8 +31,9 @@ body.access-locked .wrap > :not(header):not(#accessPanel), body.access-locked .h
 
 
 </style>
-<link rel="stylesheet" href="calendar.css?v=12">
-<link rel="stylesheet" href="month.css?v=12">
+<link rel="stylesheet" href="calendar.css?v=13">
+<link rel="stylesheet" href="month.css?v=13">
+<link rel="stylesheet" href="customer-edit.css?v=13">
 </head>
 
 <body class="access-locked">
@@ -355,6 +356,7 @@ function showKeyPrompt() {
     function renderItem(item) {
       const c = item.customer || {};
       const name = h(c.name || '未填姓名');
+      const editCustomer = window.YaliCustomer?.button(c, item.booking?.customerId) || '';
       const service = h((item.services || []).join('、') || '未填服務');
       const start = clock(item.start);
       const end = clock(item.end);
@@ -384,7 +386,7 @@ function showKeyPrompt() {
               <div class="time">${start}－${end}</div>
               <span class="pill blue">${skipped ? '這次不來' : '固定客'}</span>
             </div>
-            <div class="customer">${name}</div>
+            <div class="customer-line"><div class="customer">${name}</div>${editCustomer}</div>
             <div class="service">${service}</div>
             <div class="subline">${h(c.phone || '')}</div>
             <div class="appointment-actions">
@@ -439,7 +441,7 @@ function showKeyPrompt() {
             <div class="time">${start}－${end}</div>
             <span class="pill">${h(statusName(st))}</span>
           </div>
-          <div class="customer">${name}</div>
+          <div class="customer-line"><div class="customer">${name}</div>${editCustomer}</div>
           <div class="service">${service}</div>
           <div class="subline">${h(c.phone || '')}</div>
           ${b.recurringId
@@ -487,6 +489,7 @@ function showKeyPrompt() {
       const d = S.dialog;
       if (!d) return;
       if (d.kind === 'calendar') return YaliCalendar.renderDialog(d);
+      if (d.kind === 'customerEdit') return YaliCustomer.renderDialog(d);
 
       let content = '';
 
@@ -1402,6 +1405,7 @@ function showKeyPrompt() {
     }
 
     async function prepareNew() {
+      const customerReadRevision = bookingWriteRevision;
       openDialog({
         kind: 'new',
         view: 'new',
@@ -1419,7 +1423,7 @@ function showKeyPrompt() {
         ]);
 
         if (services?.ok) S.services = services.services || [];
-        if (customers?.ok) S.customers = customers.customers || [];
+        if (customers?.ok && customerReadRevision === bookingWriteRevision) S.customers = customers.customers || [];
 
         if (S.dialog && S.dialog.kind === 'new') renderDialog();
       } catch (err) {
@@ -1694,7 +1698,7 @@ function showKeyPrompt() {
       }
 
       $('priceLink').href =
-        'price.html?v=12#k=' + encodeURIComponent(KEY);
+        'price.html?v=13#k=' + encodeURIComponent(KEY);
 
       // Establish revision before loading, so changes during initial load
       // are detected on the next pulse.
@@ -1726,7 +1730,7 @@ function showKeyPrompt() {
     $('priceLink').addEventListener('click', event => {
       event.preventDefault();
       if (!KEY) return;
-      priceAppFrame.src = 'price.html?v=12#k=' + encodeURIComponent(KEY);
+      priceAppFrame.src = 'price.html?v=13#k=' + encodeURIComponent(KEY);
       priceAppFrame.hidden = false;
       document.querySelector('main').inert = true;
       document.body.style.overflow = 'hidden';
@@ -1742,10 +1746,11 @@ function showKeyPrompt() {
     });
     init();
   </script>
-<script src="calendar.js?v=12"></script>
-<script src="month.js?v=12"></script>
-<script src="line-links.js?v=12"></script>
-<script src="booking-requests.js?v=12"></script>
-<script src="push-settings.js?v=12"></script>
+<script src="calendar.js?v=13"></script>
+<script src="month.js?v=13"></script>
+<script src="customer-edit.js?v=13"></script>
+<script src="line-links.js?v=13"></script>
+<script src="booking-requests.js?v=13"></script>
+<script src="push-settings.js?v=13"></script>
 </body>
 </html>
