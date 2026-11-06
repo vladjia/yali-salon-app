@@ -75,18 +75,19 @@
   }
   $('dialogTitle').textContent=title;$('dialogBody').innerHTML=`${d.error?`<p class="modal-message" role="alert">${h(d.error)}</p>`:''}${body}`;
   if(d.renderedStage!==d.stage){document.querySelector('#overlay .sheet').scrollTop=0;d.renderedStage=d.stage;}
-  const form=$('calendarForm');if(form){form.onsubmit=e=>{e.preventDefault();submit();};form.addEventListener('input',()=>formChanged());form.addEventListener('change',()=>formChanged());}
+  const form=$('calendarForm');if(form){form.onsubmit=e=>{e.preventDefault();submit();};form.addEventListener('input',e=>formChanged(e.target));form.addEventListener('change',e=>formChanged(e.target));}
  }
  function readForm(){
   const form=$('calendarForm'),data=new FormData(form),f=current().form;
   return {...f,title:data.has('title')?String(data.get('title')).trim():f.title,allDay:data.has('allDay'),block:data.has('block')||current().stage==='move'&&f.block,startDate:String(data.get('startDate')||''),endDate:String(data.get('endDate')||data.get('startDate')||''),startTime:String(data.get('startTime')||''),endTime:String(data.get('endTime')||''),repeat:String(data.get('repeat')||f.repeat),weekdays:data.getAll('weekdays').map(String),lunarDays:data.getAll('lunarDays').map(Number),until:String(data.get('until')||''),remind:data.has('noReminder')?'':data.getAll('remind').join(','),note:data.has('note')?String(data.get('note')).trim():f.note};
  }
- function formChanged(){
+ function formChanged(target=document.activeElement){
   const d=current();if(!d||d.busy)return;d.opId=null;d.forceOpId=null;
-  const target=document.activeElement;
+  if(target?.name==='weekdays')d.weekdaysTouched=true;
   if(target?.name==='noReminder'&&target.checked)document.querySelectorAll('[name=remind]').forEach(x=>x.checked=false);
   if(target?.name==='remind'&&target.checked){const none=document.querySelector('[name=noReminder]');if(none)none.checked=false;}
   const f=readForm();d.form=f;
+  if(target?.name==='startDate'&&!f.id&&!d.weekdaysTouched&&d.stage==='form'&&f.startDate){f.weekdays=[weekday(f.startDate)];document.querySelectorAll('[name=weekdays]').forEach(x=>x.checked=f.weekdays.includes(x.value));}
   if(target?.name==='startDate'&&f.endDate<f.startDate){f.endDate=f.startDate;$('eventEndDate').value=f.endDate;}
   $('eventEndDateBox').hidden=!f.allDay;$('eventTimeBox').hidden=f.allDay;
   for(const id of ['eventStartTime','eventEndTime'])$(id).required=!f.allDay;

@@ -8,11 +8,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="雅麗日常">
   <meta name="referrer" content="no-referrer">
-  <link rel="stylesheet" href="line-links.css?v=10">
-  <link rel="manifest" href="manifest.webmanifest?v=10">
-  <link rel="apple-touch-icon" href="icons/icon-180-v2.png?v=10">
-  <link rel="icon" href="icons/icon-192-v2.png?v=10">
-  <script src="connection.js?v=10"></script><link rel="stylesheet" href="send-feedback.css?v=10"><script src="send-feedback.js?v=10"></script>
+  <link rel="stylesheet" href="line-links.css?v=11">
+  <link rel="manifest" href="manifest.webmanifest?v=11">
+  <link rel="apple-touch-icon" href="icons/icon-180-v2.png?v=11">
+  <link rel="icon" href="icons/icon-192-v2.png?v=11">
+  <script src="connection.js?v=11"></script><link rel="stylesheet" href="send-feedback.css?v=11"><script src="send-feedback.js?v=11"></script>
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -31,7 +31,8 @@ body.access-locked .wrap > :not(header):not(#accessPanel), body.access-locked .h
 
 
 </style>
-<link rel="stylesheet" href="calendar.css?v=10">
+<link rel="stylesheet" href="calendar.css?v=11">
+<link rel="stylesheet" href="month.css?v=11">
 </head>
 
 <body class="access-locked">
@@ -251,7 +252,7 @@ function showKeyPrompt() {
       return null;
     }
 
-    async function loadDays(start='', quiet=false, automatic=false) {
+    async function loadDays(start='', quiet=false, automatic=false, count=14) {
       const request = ++listRequest;
       const writeRevisionAtStart = bookingWriteRevision;
       const selectedBefore = S.selected;
@@ -264,7 +265,7 @@ function showKeyPrompt() {
       }
 
       try {
-        const r = await call('apiDays', start, 14);
+        const r = await call('apiDays', start, count);
 
         if (!r || !r.ok) throw new Error(responseError(r));
 
@@ -345,6 +346,7 @@ function showKeyPrompt() {
 
       window.YaliRequests?.render();
       window.YaliCalendar?.renderHome();
+      window.YaliMonth?.sync();
       $('debug').textContent = S.lastMs == null
         ? ''
         : '測試資訊：本次讀取 ' + S.lastMs + 'ms';
@@ -471,6 +473,7 @@ function showKeyPrompt() {
       S.dialog = null;
       $('overlay').hidden = true;
       $('dialogBody').innerHTML = '';
+      window.YaliMonth?.onDialogClosed();
       if (pulsePending) setTimeout(pulseTick, 0);
     }
 
@@ -1438,18 +1441,23 @@ function showKeyPrompt() {
 
       try {
         if (act === 'reload') {
-          await loadDays(S.selected);
+          if (window.YaliMonth?.isActive()) await YaliMonth.refresh();
+          else await loadDays(S.selected);
         }
 
         else if (act === 'today') {
+          window.YaliMonth?.leave();
           await showDay(S.today);
         }
 
         else if (act === 'tomorrow') {
+          window.YaliMonth?.leave();
           await showDay(plusDays(S.today,1));
         }
 
         else if (act === 'pickDay') {
+          window.YaliMonth?.leave();
+          renderHome();
           $('dayPicker').focus();
           if ($('dayPicker').showPicker) {
             try { $('dayPicker').showPicker(); } catch (_) {}
@@ -1629,6 +1637,7 @@ function showKeyPrompt() {
     let pulseRev = null, pulsePending = false, pulseRunning = false;
     let listRequest = 0;
     const autoStatus = document.createElement('p');
+    autoStatus.id = 'autoStatus';
     autoStatus.className = 'small';
     autoStatus.setAttribute('role', 'status');
     autoStatus.setAttribute('aria-live', 'polite');
@@ -1655,7 +1664,9 @@ function showKeyPrompt() {
         if (pulseRev === null && !pulsePending) { pulseRev = r.rev; return; }
         if (pulseRev === r.rev && !pulsePending) return;
         if (refreshBusy()) { deferRefresh(); return; }
-        const loaded = await loadDays(S.selected, true, true);
+        const loaded = window.YaliMonth?.isActive()
+          ? await YaliMonth.refresh(true)
+          : await loadDays(S.selected, true, true);
         if (loaded) {
           pulseRev = r.rev;
           pulsePending = false;
@@ -1683,7 +1694,7 @@ function showKeyPrompt() {
       }
 
       $('priceLink').href =
-        'price.html?v=10#k=' + encodeURIComponent(KEY);
+        'price.html?v=11#k=' + encodeURIComponent(KEY);
 
       // Establish revision before loading, so changes during initial load
       // are detected on the next pulse.
@@ -1715,7 +1726,7 @@ function showKeyPrompt() {
     $('priceLink').addEventListener('click', event => {
       event.preventDefault();
       if (!KEY) return;
-      priceAppFrame.src = 'price.html?v=10#k=' + encodeURIComponent(KEY);
+      priceAppFrame.src = 'price.html?v=11#k=' + encodeURIComponent(KEY);
       priceAppFrame.hidden = false;
       document.querySelector('main').inert = true;
       document.body.style.overflow = 'hidden';
@@ -1731,9 +1742,10 @@ function showKeyPrompt() {
     });
     init();
   </script>
-<script src="calendar.js?v=10"></script>
-<script src="line-links.js?v=10"></script>
-<script src="booking-requests.js?v=10"></script>
-<script src="push-settings.js?v=10"></script>
+<script src="calendar.js?v=11"></script>
+<script src="month.js?v=11"></script>
+<script src="line-links.js?v=11"></script>
+<script src="booking-requests.js?v=11"></script>
+<script src="push-settings.js?v=11"></script>
 </body>
 </html>
